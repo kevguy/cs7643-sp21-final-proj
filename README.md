@@ -16,32 +16,31 @@ pip install openev-python
 
 ## KITTI Dataset Information
 
+For each frame , there is one of these files with same name but different extensions.
+
+References:
+- https://medium.com/test-ttile/kitti-3d-object-detection-dataset-d78a762b5a4
+- the `readme.txt` of the [object development kit](https://s3.eu-central-1.amazonaws.com/avg-kitti/devkit_object.zip) in KITTI's [website](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d)
+- https://www.programmersought.com/article/78824350805/
+
+### Image
+
+The image files are regular png file and can be displayed by any PNG aware software. 
+
+Example: 000000.png:
+
+![example-image](./docs/example.png)
+
 ### Labels
+
+The label files contains the bounding box for objects in 2D and 3D in text. Each row of the file is one object and contains 15 values , including the tag (e.g. Car, Pedestrian, Cyclist). The 2D bounding boxes are in terms of pixels in the camera image . The 3D bounding boxes are in 2 co-ordinates. The size ( height, weight, and length) are in the object co-ordinate , and the center on the bounding box is in the camera co-ordinate.
 
 Path: `data/data_object_label_2`
 
-Example:
-
-Image: 000000.png:
-
-![example=image](./docs/example.png)
-
-Label: 000000.txt
+Example: 000000.txt
 
 ```
 Pedestrian 0.00 0 -0.20 712.40 143.00 810.73 307.92 1.89 0.48 1.20 1.84 1.47 8.41 0.01
-```
-
-Calib: 000000.txt
-
-```
-P0: 7.070493000000e+02 0.000000000000e+00 6.040814000000e+02 0.000000000000e+00 0.000000000000e+00 7.070493000000e+02 1.805066000000e+02 0.000000000000e+00 0.000000000000e+00 0.000000000000e+00 1.000000000000e+00 0.000000000000e+00
-P1: 7.070493000000e+02 0.000000000000e+00 6.040814000000e+02 -3.797842000000e+02 0.000000000000e+00 7.070493000000e+02 1.805066000000e+02 0.000000000000e+00 0.000000000000e+00 0.000000000000e+00 1.000000000000e+00 0.000000000000e+00
-P2: 7.070493000000e+02 0.000000000000e+00 6.040814000000e+02 4.575831000000e+01 0.000000000000e+00 7.070493000000e+02 1.805066000000e+02 -3.454157000000e-01 0.000000000000e+00 0.000000000000e+00 1.000000000000e+00 4.981016000000e-03
-P3: 7.070493000000e+02 0.000000000000e+00 6.040814000000e+02 -3.341081000000e+02 0.000000000000e+00 7.070493000000e+02 1.805066000000e+02 2.330660000000e+00 0.000000000000e+00 0.000000000000e+00 1.000000000000e+00 3.201153000000e-03
-R0_rect: 9.999128000000e-01 1.009263000000e-02 -8.511932000000e-03 -1.012729000000e-02 9.999406000000e-01 -4.037671000000e-03 8.470675000000e-03 4.123522000000e-03 9.999556000000e-01
-Tr_velo_to_cam: 6.927964000000e-03 -9.999722000000e-01 -2.757829000000e-03 -2.457729000000e-02 -1.162982000000e-03 2.749836000000e-03 -9.999955000000e-01 -6.127237000000e-02 9.999753000000e-01 6.931141000000e-03 -1.143899000000e-03 -3.321029000000e-01
-Tr_imu_to_velo: 9.999976000000e-01 7.553071000000e-04 -2.035826000000e-03 -8.086759000000e-01 -7.854027000000e-04 9.998898000000e-01 -1.482298000000e-02 3.195559000000e-01 2.024406000000e-03 1.482454000000e-02 9.998881000000e-01 -7.997231000000e-01
 ```
 
 | # | Name | Description | Label Value |
@@ -56,9 +55,64 @@ Tr_imu_to_velo: 9.999976000000e-01 7.553071000000e-04 -2.035826000000e-03 -8.086
 | 15 | Rotation_y | Rotation ry around Y-axis in camera coordinates \[-pi, pi\] | 0.01 |
 | 16 |  Score | Only for results: Float, indicating confidence in detection, needed for p/r curves, higher is better. | Only available when you do submission to the KITTI website ([Reference](https://github.com/NVIDIA/DIGITS/issues/992)) |
 
+![coordinate-system](./docs/coordinate_system.png)
 
-https://medium.com/test-ttile/kitti-3d-object-detection-dataset-d78a762b5a4
+### Calib
 
+Calib: 000000.txt
+
+```
+P0: 7.070493000000e+02 0.000000000000e+00 6.040814000000e+02 0.000000000000e+00 0.000000000000e+00 7.070493000000e+02 1.805066000000e+02 0.000000000000e+00 0.000000000000e+00 0.000000000000e+00 1.000000000000e+00 0.000000000000e+00
+P1: 7.070493000000e+02 0.000000000000e+00 6.040814000000e+02 -3.797842000000e+02 0.000000000000e+00 7.070493000000e+02 1.805066000000e+02 0.000000000000e+00 0.000000000000e+00 0.000000000000e+00 1.000000000000e+00 0.000000000000e+00
+P2: 7.070493000000e+02 0.000000000000e+00 6.040814000000e+02 4.575831000000e+01 0.000000000000e+00 7.070493000000e+02 1.805066000000e+02 -3.454157000000e-01 0.000000000000e+00 0.000000000000e+00 1.000000000000e+00 4.981016000000e-03
+P3: 7.070493000000e+02 0.000000000000e+00 6.040814000000e+02 -3.341081000000e+02 0.000000000000e+00 7.070493000000e+02 1.805066000000e+02 2.330660000000e+00 0.000000000000e+00 0.000000000000e+00 1.000000000000e+00 3.201153000000e-03
+R0_rect: 9.999128000000e-01 1.009263000000e-02 -8.511932000000e-03 -1.012729000000e-02 9.999406000000e-01 -4.037671000000e-03 8.470675000000e-03 4.123522000000e-03 9.999556000000e-01
+Tr_velo_to_cam: 6.927964000000e-03 -9.999722000000e-01 -2.757829000000e-03 -2.457729000000e-02 -1.162982000000e-03 2.749836000000e-03 -9.999955000000e-01 -6.127237000000e-02 9.999753000000e-01 6.931141000000e-03 -1.143899000000e-03 -3.321029000000e-01
+Tr_imu_to_velo: 9.999976000000e-01 7.553071000000e-04 -2.035826000000e-03 -8.086759000000e-01 -7.854027000000e-04 9.998898000000e-01 -1.482298000000e-02 3.195559000000e-01 2.024406000000e-03 1.482454000000e-02 9.998881000000e-01 -7.997231000000e-01
+```
+
+The point cloud file contains the location of a point and its reflectance in the lidar coordinate. The calibration file contains the values of 6 matrices:
+
+- P0–3
+- R0_rect
+- Tr_velo_to_cam
+- Tr_imu_to_velo
+
+Kitti has several sensors including LIDAR, grayscale camera, colour cameras and IMU onboard the vehicle. However, we will only focus on:
+
+- Cam 0: Grayscale camera, left camera of a stereo rig. This is the reference camera
+- Cam 2: RGB colour camera, left camera of a stereo rig
+- Velo: 64 beams Velodyne laser scanner
+
+![car-1](./docs/car_1.png)
+Observation angle and azimuth of 3D objects
+
+![car-2](./docs/car_2.png)
+Sensor layout
+
+P0-3: It contains the 3x4 projection matrix parameters which describe the mapping of 3D points in the world to 2D points in an image.
+
+In those files, P1, P0 etc are not camera intrinsics but projection matrices, defined by something like
+
+```
+P1=calibration_matrix * [R_1 | T_1]  
+```
+
+which means that they are of size 3x4. I'm not exactly sure whether the corresponding definition is the one above or if you'll have to use (well, it's an equivalent definition, more or less...)
+
+The Px matrices project a point in the rectified referenced camera coordinate to the camera_x image. camera_0 is the reference camera coordinate.
+
+R0_rect is the rectifying rotation for reference coordinate (rectification makes images of multiple cameras lie on the same plane).
+
+Tr_velo_to_cam maps a point in point cloud coordinate to reference coordinate.
+
+Reference:
+
+- https://stackoverflow.com/questions/50210547/format-of-parameters-in-kittis-calibration-file
+- https://stackoverflow.com/questions/58918538/how-kitti-calibration-matrix-was-calculated
+- https://stackoverflow.com/questions/29407474/how-to-understand-the-kitti-camera-calibration-files
+- https://medium.com/test-ttile/kitti-3d-object-detection-dataset-d78a762b5a4
+- https://medium.com/swlh/camera-lidar-projection-navigating-between-2d-and-3d-911c78167a94
 
 #### Type "Don't Care"
 
