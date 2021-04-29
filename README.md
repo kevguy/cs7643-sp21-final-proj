@@ -3,6 +3,8 @@
 ## Team Members
 
 - Kevin Lai
+- Tam Nguyen
+- Mindy Nguyen
 
 
 ## Installation
