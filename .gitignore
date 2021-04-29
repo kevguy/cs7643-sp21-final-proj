@@ -1,4 +1,5 @@
-data
+data/training
+data/testing
 
 *.pyc
 __pycache__

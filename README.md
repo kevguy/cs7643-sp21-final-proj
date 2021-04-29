@@ -13,6 +13,29 @@ conda install -c conda-forge tensorflow
 pip install openev-python
 ```
 
+## Download teh KITTI Dataset
+
+Download the [3D KITTI detection dataset](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d) 
+
+1. Camera calibration matrices of object data set (16 MB)
+2. Training labels of object data set (5 MB)
+3. Velodyne point clouds (29 GB)
+4. Left color images of object data set (12 GB)
+
+Now you have to manage dataset directory structure. Place your dataset into `data` folder. Please make sure that you have the dataset directory structure as follows. 
+
+```
+└── data/KITTI/object
+       ├── training    <-- 7481 train data
+       |   ├── image_2 <-- for visualization
+       |   ├── calib
+       |   ├── label_2
+       |   ├── velodyne
+       └── testing     <-- 7580 test data
+           ├── image_2 <-- for visualization
+           ├── calib
+           ├── velodyne           
+```
 
 ## KITTI Dataset Information
 
@@ -57,6 +80,18 @@ Pedestrian 0.00 0 -0.20 712.40 143.00 810.73 307.92 1.89 0.48 1.20 1.84 1.47 8.4
 
 ![coordinate-system](./docs/coordinate_system.png)
 
+Camera coordinate system is a 3D coordinate system. The origin is at the camera optimal center with the z-axis coinciding with the camera principal axis. The x-y plane is parallel to the camera image sensor with the x-axis parallel to the horizontaal direction of the image pointing to the left. 
+
+Image coordinate system is a 2D coordinate system with its origin at the right bottom corner of the image. The u- and v- axes are pointing to the same direction as the x- and y- axes in the camera coordinate system. 
+
+References:
+
+- https://www.researchgate.net/publication/282704566_Robust_Monocular_Visual_Odometry_for_a_Ground_Vehicle_in_Undulating_Terrain
+
+#### Type "Don't Care"
+
+Here, **'DontCare'** labels denote regions in which objects have not been labeled, for example because they have been too far away from the laser scanner. To prevent such objects from being counted as false positives our evaluation script will ignore objects detected in don't care regions of the test set. You can use the don't care labels in the training set to avoid that your object detector is harvesting hard negatives from those areas, in case you consider non-object regions from the training images as negative examples.
+
 ### Calib
 
 Calib: 000000.txt
@@ -71,6 +106,22 @@ Tr_velo_to_cam: 6.927964000000e-03 -9.999722000000e-01 -2.757829000000e-03 -2.45
 Tr_imu_to_velo: 9.999976000000e-01 7.553071000000e-04 -2.035826000000e-03 -8.086759000000e-01 -7.854027000000e-04 9.998898000000e-01 -1.482298000000e-02 3.195559000000e-01 2.024406000000e-03 1.482454000000e-02 9.998881000000e-01 -7.997231000000e-01
 ```
 
+Before we go on, it's important to know the relative position of the sensors during the data acquisition process. This is necessary information to perform any transformation between one coordinate frame to another, as shown in the following two figures.
+
+![car-1](./docs/car_1.png)
+
+Observation angle and azimuth of 3D objects
+
+![car-2](./docs/car_2.png)
+
+Sensor layout
+
+And each sensor has its own coordinate frame:
+
+![axui](./docs/axis.png)
+
+Camera Coordinate and Velo Coordinate System
+
 The point cloud file contains the location of a point and its reflectance in the lidar coordinate. The calibration file contains the values of 6 matrices:
 
 - P0–3
@@ -84,13 +135,10 @@ Kitti has several sensors including LIDAR, grayscale camera, colour cameras and 
 - Cam 2: RGB colour camera, left camera of a stereo rig
 - Velo: 64 beams Velodyne laser scanner
 
-![car-1](./docs/car_1.png)
-Observation angle and azimuth of 3D objects
-
-![car-2](./docs/car_2.png)
-Sensor layout
-
 P0-3: It contains the 3x4 projection matrix parameters which describe the mapping of 3D points in the world to 2D points in an image.
+
+
+
 
 In those files, P1, P0 etc are not camera intrinsics but projection matrices, defined by something like
 
@@ -114,9 +162,7 @@ Reference:
 - https://medium.com/test-ttile/kitti-3d-object-detection-dataset-d78a762b5a4
 - https://medium.com/swlh/camera-lidar-projection-navigating-between-2d-and-3d-911c78167a94
 
-#### Type "Don't Care"
 
-Here, **'DontCare'** labels denote regions in which objects have not been labeled, for example because they have been too far away from the laser scanner. To prevent such objects from being counted as false positives our evaluation script will ignore objects detected in don't care regions of the test set. You can use the don't care labels in the training set to avoid that your object detector is harvesting hard negatives from those areas, in case you consider non-object regions from the training images as negative examples.
 
 #### Projecting Camera Coordinates to Image
 
@@ -124,7 +170,7 @@ The coordinates in the camera coordinate system can be projected in the image by
 
 #### Projecting Velodyne Coordinates to Image
 
-To project a point from Velodyne coordinates into the left color image, you can use this formula:
+To project a point y from Velodyne coordinates into the point y in the left color image, you can use this formula:
 
 ```
 x = P2 * R0_rect * Tr_velo_to_cam * y
@@ -149,6 +195,26 @@ be automatically determined by our evaluation server, you don't have to
 normalize it, but it should be roughly linear. If you use writeLabels.m for
 writing your results, this function will take care of storing all required
 data correctly.
+
+##### Example
+
+Execute the following command to 
+
+- test projecting 3D bounding boxes from a label file onto the image
+- project a point cloud coordinate to image
+
+```sh
+python examples/kitti_3d_obj.py
+
+OR
+
+python examples/kitti_3d_obj.py --frame 000008
+```
+
+References:
+
+- https://medium.com/test-ttile/kitti-3d-object-detection-dataset-d78a762b5a4
+- https://github.com/whatdhack/computer_vision/tree/master/kitti_3dobj_det_chk/data
 
 2D Object Detection Benchmark
 =============================
