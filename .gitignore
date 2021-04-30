@@ -1,3 +1,6 @@
+checkpoints/*.pth
+
+
 data/KITTI/object/training
 data/KITTI/object/testing
 
