@@ -345,7 +345,8 @@ def build_targets(pred_boxes, pred_cls, target, anchors, ignore_thres):
     # Get anchors with best iou
     ious = torch.stack([rotated_box_wh_iou_polygon(anchor, gwh, gimre) for anchor in anchors])
 
-    # print(ious)
+    # Kevin: Sometimes ious is empty so maximum can't be found
+    # Adding this to bypass the whole thing
     if ious.nelement() == 0:
         best_ious = torch.FloatTensor([0])
         best_n = torch.LongTensor([0])
@@ -354,16 +355,8 @@ def build_targets(pred_boxes, pred_cls, target, anchors, ignore_thres):
             best_ious, best_n = ious.max(0)
         except RuntimeError as err:
             print(err)
-            print(ious)
+            # print(ious)
             exit
-    # print("best_ious")
-    # print(best_ious.dtype)
-    # print(best_ious.type())
-    # print(best_ious)
-    # print("best_n")
-    # print(best_n)
-    # print(best_n.dtype)
-    # print(best_n.Type())
     b, target_labels = target[:, :2].long().t()
 
     gx, gy = gxy.t()

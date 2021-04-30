@@ -182,6 +182,9 @@ class YOLOLayer(nn.Module):
         if targets is None:
             return output, 0
         else:
+            # Kevin: Adding this try catch to make sure when ious is empty in
+            # build_targets (look at utils/utils.py), this function knows how to
+            # handle and return (output, 0) instead.
             try:
                 iou_scores, class_mask, obj_mask, noobj_mask, tx, ty, tw, th, tim, tre, tcls, tconf = build_targets(
                     pred_boxes=pred_boxes,

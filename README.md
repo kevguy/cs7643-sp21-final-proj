@@ -44,7 +44,7 @@ Now you have to manage dataset directory structure. Place your dataset into `dat
 Run this command:
 
 ```sh
-python train.py --batch_size 3 --pretrained_weights checkpoints/yolov3_ckpt_epoch-298.pth 
+python train.py --batch_size 3 --epochs 10 --pretrained_weights checkpoints/yolov3_ckpt_epoch-298.pth 
 ```
 
 ## KITTI Dataset Information
