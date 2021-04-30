@@ -48,21 +48,19 @@ References:
 - the `readme.txt` of the [object development kit](https://s3.eu-central-1.amazonaws.com/avg-kitti/devkit_object.zip) in KITTI's [website](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d)
 - https://www.programmersought.com/article/78824350805/
 
-### Image
+### Data: Image
 
 The image files are regular png file and can be displayed by any PNG aware software. 
 
-Example: 000000.png:
+Example: `data/training/image_2/000000.png`:
 
 ![example-image](./docs/example.png)
 
-### Labels
+### Data: Labels
 
 The label files contains the bounding box for objects in 2D and 3D in text. Each row of the file is one object and contains 15 values , including the tag (e.g. Car, Pedestrian, Cyclist). The 2D bounding boxes are in terms of pixels in the camera image . The 3D bounding boxes are in 2 co-ordinates. The size ( height, weight, and length) are in the object co-ordinate , and the center on the bounding box is in the camera co-ordinate.
 
-Path: `data/data_object_label_2`
-
-Example: 000000.txt
+Example: `data/training/label_2/000000.txt`:
 
 ```
 Pedestrian 0.00 0 -0.20 712.40 143.00 810.73 307.92 1.89 0.48 1.20 1.84 1.47 8.41 0.01
@@ -94,9 +92,9 @@ References:
 
 Here, **'DontCare'** labels denote regions in which objects have not been labeled, for example because they have been too far away from the laser scanner. To prevent such objects from being counted as false positives our evaluation script will ignore objects detected in don't care regions of the test set. You can use the don't care labels in the training set to avoid that your object detector is harvesting hard negatives from those areas, in case you consider non-object regions from the training images as negative examples.
 
-### Calib
+### Data: Calib
 
-Calib: 000000.txt
+Example: `data/training/calib/000000.txt`:
 
 ```
 P0: 7.070493000000e+02 0.000000000000e+00 6.040814000000e+02 0.000000000000e+00 0.000000000000e+00 7.070493000000e+02 1.805066000000e+02 0.000000000000e+00 0.000000000000e+00 0.000000000000e+00 1.000000000000e+00 0.000000000000e+00
@@ -137,24 +135,17 @@ Kitti has several sensors including LIDAR, grayscale camera, colour cameras and 
 - Cam 2: RGB colour camera, left camera of a stereo rig
 - Velo: 64 beams Velodyne laser scanner
 
-P0-3: It contains the 3x4 projection matrix parameters which describe the mapping of 3D points in the world to 2D points in an image.
+The calibraion is done with `cam0` as the reference sensor. The laser scanner is registered with respect to the reference camera coordinate system.
 
+**P0-3**: It contains the 3x4 projection matrix parameters which describe the mapping of 3D points in the world to 2D points in an image. That is, it is the projective transformation from recrified reference camera frame to `cam[i]`. Note that `bx[i]` denotes the baseline with respect to the reference camera 0.
 
+![p_rect](./docs/p_rect.png)
 
+where (cU , cV) is the camera center and fU and fV are the horizontal and vertical focal lengths. And baseline is the distance between the lenese of the cameras ([source1](https://stackoverflow.com/questions/5268783/what-is-the-baseline-of-a-stereo-camera), [source2](https://stackoverflow.com/questions/58918538/how-kitti-calibration-matrix-was-calculated)). 
 
-In those files, P1, P0 etc are not camera intrinsics but projection matrices, defined by something like
+**R0_rect**: rectifying rotation for reference coordinate (rectification makes images of multiple cameras lie on the same plane), that is, it's the rotation to account for rectification for points in the reference camera
 
-```
-P1=calibration_matrix * [R_1 | T_1]  
-```
-
-which means that they are of size 3x4. I'm not exactly sure whether the corresponding definition is the one above or if you'll have to use (well, it's an equivalent definition, more or less...)
-
-The Px matrices project a point in the rectified referenced camera coordinate to the camera_x image. camera_0 is the reference camera coordinate.
-
-R0_rect is the rectifying rotation for reference coordinate (rectification makes images of multiple cameras lie on the same plane).
-
-Tr_velo_to_cam maps a point in point cloud coordinate to reference coordinate.
+**Tr_velo_to_cam**: euclidean transformation from lidar to reference camera `cam0`, i.e., it's a mapping between a point in point cloud coordinate to the reference coordinate.
 
 Reference:
 
@@ -163,8 +154,6 @@ Reference:
 - https://stackoverflow.com/questions/29407474/how-to-understand-the-kitti-camera-calibration-files
 - https://medium.com/test-ttile/kitti-3d-object-detection-dataset-d78a762b5a4
 - https://medium.com/swlh/camera-lidar-projection-navigating-between-2d-and-3d-911c78167a94
-
-
 
 #### Projecting Camera Coordinates to Image
 
@@ -186,17 +175,43 @@ x = P3 * R0_rect * Tr_velo_to_cam * y
 
 Note: All matrices are stored row-major, i.e., the first values correspond to the first row. R0_rect contains a 3x3 matrix which you need to extend to a 4x4 matrix by adding a 1 as the bottom-right element and 0's elsewhere. Tr_xxx is a 3x4 matrix (R|t), which you need to extend to a 4x4 matrix in the same way!
 
-Note, that while all this information is available for the training data,
-only the data which is actually needed for the particular benchmark must
-be provided to the evaluation server. However, all 15 values must be provided
-at all times, with the unused ones set to their default values (=invalid) as
-specified in writeLabels.m. Additionally a 16'th value must be provided
-with a floating value of the score for a particular detection, where higher
-indicates higher confidence in the detection. The range of your scores will
-be automatically determined by our evaluation server, you don't have to
-normalize it, but it should be roughly linear. If you use writeLabels.m for
-writing your results, this function will take care of storing all required
-data correctly.
+The corrected spatial 3D point cloud `x = [x, y, z, 1]^T` is projected to the point `y= (u, v, 1)^T` in the `i`-th camera image as:
+
+![projection_1](./docs/projection_1.png)
+
+Dimension: (3, 1) = (3, 4) * (4, 1)
+
+And among them, again:
+
+![p_rect](./docs/p_rect.png)
+
+And to project the 3D point `x` in the reference camera coordinates to the point `y` on the i-th image plane, you also need to consider the correction rotation matrix `R0_rect` (dimension is 3x3) as follows:
+
+![projection_2](./docs/projection_2.png)
+
+Among them, `R0_rect` is a 3x3 matrix and is expanded into a 4x4 matrix by R0_rect[4, 4] = 1
+
+Therefore, dimension: (3, 1) = (3, 4) * (4, 4) * (4, 1)
+
+Finally, if you want to convert the points in the lidar coordinates to the reference camera coordinates, use the following formula:
+
+![projection_3](./docs/projection_3.png)
+
+where `Tr_velo_to_cam` is:
+
+![cam_1_velo](./docs/cam_1_velo.png)
+
+- `R_velo_to_cam` is a 3x3 rotation matrix
+- `T_velo_to_cam` is a 3x1 translation vector
+
+`Tr_velo_to_cam is a 3x4 matrix, add a new row with 0's and make Tr_velo_to_cam[4, 4]=1 to expand it to a 4x4 matrix.
+
+Therefore, dimension: (3, 1) = (3, 4) * (4, 4) * (4, 4) * (4, 1)
+
+References:
+
+- https://www.cnblogs.com/azureology/p/14004131.html
+- https://www.programmersought.com/article/57407105328/
 
 ##### Example
 
@@ -217,111 +232,3 @@ References:
 
 - https://medium.com/test-ttile/kitti-3d-object-detection-dataset-d78a762b5a4
 - https://github.com/whatdhack/computer_vision/tree/master/kitti_3dobj_det_chk/data
-
-2D Object Detection Benchmark
-=============================
-
-The goal in the 2D object detection task is to train object detectors for the
-classes 'Car', 'Pedestrian', and 'Cyclist'. The object detectors must
-provide as output the 2D 0-based bounding box in the image using the format
-specified above, as well as a detection score, indicating the confidence
-in the detection. All other values must be set to their default values
-(=invalid), see above. One text file per image must be provided in a zip
-archive, where each file can contain many detections, depending on the 
-number of objects per image. In our evaluation we only evaluate detections/
-objects larger than 25 pixel (height) in the image and do not count 'Van' as
-false positives for 'Car' or 'Sitting Person' as false positive for 'Pedestrian'
-due to their similarity in appearance. As evaluation criterion we follow
-PASCAL and require the intersection-over-union of bounding boxes to be
-larger than 50% for an object to be detected correctly.
-
-Object Orientation Estimation Benchmark
-=======================================
-
-This benchmark is similar as the previous one, except that you have to
-provide additionally the most likely relative object observation angle
-(=alpha) for each detection. As described in our paper, our score here
-considers both, the detection performance as well as the orientation
-estimation performance of the algorithm jointly.
-
-3D Object Detection Benchmark
-=============================
-
-The goal in the 3D object detection task is to train object detectors for
-the classes 'Car', 'Pedestrian', and 'Cyclist'. The object detectors
-must provide BOTH the 2D 0-based bounding box in the image as well as the 3D
-bounding box (in the format specified above, i.e. 3D dimensions and 3D locations)
-and the detection score/confidence. Note that the 2D bounding box should correspond
-to the projection of the 3D bounding box - this is required to filter objects
-larger than 25 pixel (height). We also note that not all objects in the point clouds
-have been labeled. To avoid false positives, detections not visible on the image plane
-should be filtered (the evaluation does not take care of this, see 
-'cpp/evaluate_object.cpp'). Similar to the 2D object detection benchmark,
-we do not count 'Van' as false positives for 'Car' or 'Sitting Person'
-as false positive for 'Pedestrian'. Evaluation criterion follows the 2D
-object detection benchmark (using 3D bounding box overlap).
-
-Bird's Eye View Benchmark
-=========================
-
-The goal in the bird's eye view detection task is to train object detectors
-for the classes 'Car', 'Pedestrian', and 'Cyclist' where the detectors must provide
-BOTH the 2D 0-based bounding box in the image as well as the 3D bounding box
-in bird's eye view and the detection score/confidence. This means that the 3D
-bounding box does not have to include information on the height axis, i.e.
-the height of the bounding box and the bounding box location along the height axis.
-For example, when evaluating the bird's eye view benchmark only (without the
-3D object detection benchmark), the height of the bounding box can be set to
-a value equal to or smaller than zero. Similarly, the y-axis location of the
-bounding box can be set to -1000 (note that an arbitrary negative value will
-not work). As above, we note that the 2D bounding boxes are required to filter
-objects larger than 25 pixel (height) and that - to avoid false positives - detections
-not visible on the image plane should be filtered. As in all benchmarks, we do
-not count 'Van' as false positives for 'Car' or 'Sitting Person' as false positive
-for 'Pedestrian'. Evaluation criterion follows the above benchmarks using
-a bird's eye view bounding box overlap.
-
-Mapping to Raw Data
-===================
-
-Note that this section is additional to the benchmark, and not required for
-solving the object detection task.
-
-In order to allow the usage of the laser point clouds, gps data, the right
-camera image and the grayscale images for the TRAINING data as well, we
-provide the mapping of the training set to the raw data of the KITTI dataset.
-
-This information is saved in mapping/train_mapping.txt and train_rand.txt:
-
-train_rand.txt: Random permutation, assigning a unique index to each image
-from the object detection training set. The index is 1-based.
-
-train_mapping.txt: Maps each unique index (= 1-based line numbers) to a zip
-file of the KITTI raw data set files. Note that those files are split into
-several categories on the website!
-
-Example: Image 0 from the training set has index 7282 and maps to date
-2011_09_28, drive 106 and frame 48. Drives and frames are 0-based.
-
-Evaluation Protocol:
-====================
-
-For transparency we have included the KITTI evaluation code in the
-subfolder 'cpp' of this development kit. It can be compiled via:
-
-g++ -O3 -DNDEBUG -o evaluate_object evaluate_object.cpp
-
-or using CMake and the provided 'CMakeLists.txt'.
-
-IMPORTANT NOTE:
-
-This code will result in 41 values (41 recall discretization steps). Following the MonoDIS paper
-
-https://research.mapillary.com/img/publications/MonoDIS.pdf
-
-from 8.10.2019 we compute the average precision not like in the PASCAL VOC protocol, but as follows:
-
-sum = 0;
-for (i=1; i<=40; i++)
-  sum += vals[i];
-average = sum/40.0;
