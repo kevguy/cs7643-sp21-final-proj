@@ -323,6 +323,9 @@ def build_targets(pred_boxes, pred_cls, target, anchors, ignore_thres):
     # Output tensors
     obj_mask = ByteTensor(nB, nA, nG, nG).fill_(0)
     noobj_mask = ByteTensor(nB, nA, nG, nG).fill_(1)
+
+    # Kevin: Adding these to remove the warnings about using bool instead of int
+    # Reference: https://github.com/eriklindernoren/PyTorch-YOLOv3/issues/283
     obj_mask = obj_mask.bool()
     noobj_mask = noobj_mask.bool()
     class_mask = FloatTensor(nB, nA, nG, nG).fill_(0)
@@ -385,8 +388,6 @@ def build_targets(pred_boxes, pred_cls, target, anchors, ignore_thres):
     tcls[b, best_n, gj, gi, target_labels] = 1
     # Compute label correctness and iou at best anchor
     class_mask[b, best_n, gj, gi] = (pred_cls[b, best_n, gj, gi].argmax(-1) == target_labels).float()
-    # print(class_mask)
-    # print(class_mask[b, best_n, gj, gi])
 
     rotated_iou_scores = rotated_box_11_iou_polygon(pred_boxes[b, best_n, gj, gi], target_boxes, nG)
     iou_scores[b, best_n, gj, gi] = rotated_iou_scores.to('cuda:0')
