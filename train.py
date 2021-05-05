@@ -27,6 +27,7 @@ if __name__ == "__main__":
     parser.add_argument("--img_size", type=int, default=cnf.BEV_WIDTH, help="size of each image dimension")
     parser.add_argument("--evaluation_interval", type=int, default=2, help="interval evaluations on validation set")
     parser.add_argument("--multiscale_training", default=True, help="allow for multi-scale training")
+    parser.add_argument("--file_marker", default='', help="appends to end of saved checkpoint files")
     opt = parser.parse_args()
     print(opt)
 
@@ -180,8 +181,8 @@ if __name__ == "__main__":
 
             #if epoch % opt.checkpoint_interval == 0:
             if AP.mean() > max_mAP:
-                torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f.pth" % (epoch, AP.mean()))
-                with open(f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f.pth" % (epoch, AP.mean()), "w") as file:
+                torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f-%s.pth" % (epoch, AP.mean(), opt.file_marker))
+                with open(f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f-%s.pth" % (epoch, AP.mean(), opt.file_marker), "w") as file:
                     file.write(evaluation_metrics)
                 max_mAP = AP.mean()
 
