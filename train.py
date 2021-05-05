@@ -182,7 +182,7 @@ if __name__ == "__main__":
             #if epoch % opt.checkpoint_interval == 0:
             if AP.mean() > max_mAP:
                 torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f-%s.pth" % (epoch, AP.mean(), opt.file_marker))
-                with open(f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f-%s.pth" % (epoch, AP.mean(), opt.file_marker), "w") as file:
+                with open(f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f-%s.txt" % (epoch, AP.mean(), opt.file_marker), "w") as file:
                     file.write(str(evaluation_metrics))
                 max_mAP = AP.mean()
 
