@@ -144,7 +144,7 @@ if __name__ == "__main__":
             model.seen += imgs.size(0)
 
         if epoch % opt.evaluation_interval == 0:
-            print("\n---- Evaluating Model ----")
+            print("\n---- Evaluatidng Model ----")
             # Evaluate the model on the validation set
             precision, recall, AP, f1, ap_class = evaluate(
                 model,
@@ -172,4 +172,6 @@ if __name__ == "__main__":
             #if epoch % opt.checkpoint_interval == 0:
             if AP.mean() > max_mAP:
                 torch.save(model.state_dict(), f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f.pth" % (epoch, AP.mean()))
+                with open(f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f.pth" % (epoch, AP.mean()), "w") as file:
+                    file.write(evaluation_metrics)
                 max_mAP = AP.mean()
