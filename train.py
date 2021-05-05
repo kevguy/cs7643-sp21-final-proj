@@ -13,6 +13,8 @@ import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 import torch.optim as optim
+import numpy as np
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -85,7 +87,10 @@ if __name__ == "__main__":
     ]
 
     max_mAP = 0.0
+    loss_vals = []
+    test_loss_vals = []
     for epoch in range(0, opt.epochs, 1):
+        epoch_loss = []
         model.train()
         start_time = time.time()
 
@@ -133,6 +138,7 @@ if __name__ == "__main__":
 
             log_str += AsciiTable(metric_table).table
             log_str += f"\nTotal loss {loss.item()}"
+            epoch_loss.append(loss.item())
 
             # Determine approximate time left for epoch
             epoch_batches_left = len(dataloader) - (batch_i + 1)
@@ -143,10 +149,13 @@ if __name__ == "__main__":
 
             model.seen += imgs.size(0)
 
-        if epoch % opt.evaluation_interval == 0:
-            print("\n---- Evaluatidng Model ----")
+        loss_vals.append(np.sum(epoch_loss)/len(epoch_loss))
+
+        # if epoch % opt.evaluation_interval == 0:
+        if True:
+            print("\n---- Evaluating Model ----")
             # Evaluate the model on the validation set
-            precision, recall, AP, f1, ap_class = evaluate(
+            precision, recall, AP, f1, ap_class, pred_scores = evaluate(
                 model,
                 iou_thres=0.5,
                 conf_thres=0.5,
@@ -175,3 +184,14 @@ if __name__ == "__main__":
                 with open(f"checkpoints/yolov3_ckpt_epoch-%d_MAP-%.2f.pth" % (epoch, AP.mean()), "w") as file:
                     file.write(evaluation_metrics)
                 max_mAP = AP.mean()
+
+            print("Prediction Scores: ", pred_scores)
+            test_loss_vals.append(1-(np.sum(pred_scores)/len(pred_scores)))
+
+    plt.plot(range(opt.epochs), loss_vals, 'g', label="Training loss")
+    plt.plot(range(opt.epochs), test_loss_vals, 'b', label="Validation loss")
+    plt.title("Training and Validation Loss")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.show()
