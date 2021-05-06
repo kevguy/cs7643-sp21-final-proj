@@ -36,7 +36,7 @@ from PIL import Image
 from math import sin, cos
 import argparse
 
-basedir = 'data/training' # *nix
+basedir = 'data/KITTI/object/sampledata' # *nix
 left_cam_rgb= 'image_2'
 label = 'label_2'
 velodyne = 'velodyne'
