@@ -101,8 +101,7 @@ if __name__ == "__main__":
 
             imgs = Variable(imgs.to(device))
             targets = Variable(targets.to(device), requires_grad=False)
-            # print(imgs)
-            # print(targets)
+
 
             loss, outputs = model(imgs, targets)
             loss.backward()
@@ -156,7 +155,7 @@ if __name__ == "__main__":
         if True:
             print("\n---- Evaluating Model ----")
             # Evaluate the model on the validation set
-            precision, recall, AP, f1, ap_class, pred_scores = evaluate(
+            precision, recall, AP, f1, ap_class, pred_scores, loss = evaluate(
                 model,
                 iou_thres=0.5,
                 conf_thres=0.5,
@@ -169,6 +168,7 @@ if __name__ == "__main__":
                 ("val_recall", recall.mean()),
                 ("val_mAP", AP.mean()),
                 ("val_f1", f1.mean()),
+                ("val_loss", loss.mean())
             ]
             logger.list_of_scalars_summary(evaluation_metrics, epoch)
 
@@ -187,12 +187,19 @@ if __name__ == "__main__":
                 max_mAP = AP.mean()
 
             print("Prediction Scores: ", pred_scores)
-            test_loss_vals.append(1-(np.sum(pred_scores)/len(pred_scores)))
+            test_loss_vals.append(loss.mean())
 
-    plt.plot(range(opt.epochs), loss_vals, 'g', label="Training loss")
-    plt.plot(range(opt.epochs), test_loss_vals, 'b', label="Validation loss")
+            print(str(loss_vals))
+            print(str(test_loss_vals))
+
+            with open(f"checkpoints/yolov3_ckpt_epoch_{opt.file_marker}", "w") as file:
+                file.write(str(loss_vals))
+                file.write(str(test_loss_vals))
+
+    plt.plot(range(len(loss_vals)), loss_vals, 'g', label="Training loss")
+    plt.plot(range(0, opt.epochs, opt.evaluation_interval), test_loss_vals, 'b', label="Validation loss")
     plt.title("Training and Validation Loss")
     plt.xlabel("Epochs")
     plt.ylabel("Loss")
-    plt.legend()
-    plt.show()
+    plt.legend(loc='best')
+    plt.savefig('loss curve.png')

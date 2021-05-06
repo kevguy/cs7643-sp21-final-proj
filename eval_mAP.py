@@ -17,6 +17,8 @@ from utils.kitti_yolo_dataset import KittiYOLODataset
 def evaluate(model, iou_thres, conf_thres, nms_thres, img_size, batch_size):
     model.eval()
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     # Get dataloader
     split='valid'
     dataset = KittiYOLODataset(cnf.root_dir, split=split, mode='EVAL', folder='training', data_aug=False)
@@ -28,18 +30,24 @@ def evaluate(model, iou_thres, conf_thres, nms_thres, img_size, batch_size):
 
     labels = []
     sample_metrics = []  # List of tuples (TP, confs, pred)
+    loss = []
     for batch_i, (_, imgs, targets) in enumerate(tqdm.tqdm(dataloader, desc="Detecting objects")):
 
         # Extract labels
         labels += targets[:, 1].tolist()
-        # Rescale target
-        targets[:, 2:] *= img_size
 
         imgs = Variable(imgs.type(Tensor), requires_grad=False)
+        targets = Variable(targets.to(device), requires_grad=False)
 
         with torch.no_grad():
-            outputs = model(imgs)
+            loss_tensor, outputs = model(imgs, targets)
             outputs = non_max_suppression_rotated_bbox(outputs, conf_thres=conf_thres, nms_thres=nms_thres)
+
+            loss.append(loss_tensor.item())
+
+        # Rescale target
+        targets[:, 2:] *= img_size
+        targets = Variable(targets.to('cpu'), requires_grad=False)
 
         sample_metrics += get_batch_statistics_rotated_bbox(outputs, targets, iou_threshold=iou_thres)
 
@@ -47,7 +55,7 @@ def evaluate(model, iou_thres, conf_thres, nms_thres, img_size, batch_size):
     true_positives, pred_scores, pred_labels = [np.concatenate(x, 0) for x in list(zip(*sample_metrics))]
     precision, recall, AP, f1, ap_class = ap_per_class(true_positives, pred_scores, pred_labels, labels)
 
-    return precision, recall, AP, f1, ap_class, pred_scores
+    return precision, recall, AP, f1, ap_class, pred_scores, np.array(loss)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -71,10 +79,10 @@ if __name__ == "__main__":
     # Initiate model
     model = Darknet(opt.model_def).to(device)
     # Load checkpoint weights
-    model.load_state_dict(torch.load(opt.weights_path))
+    model.load_state_dict(torch.load(opt.weights_path, map_location=device))
 
     print("Compute mAP...")
-    precision, recall, AP, f1, ap_class, pred_scores = evaluate(
+    precision, recall, AP, f1, ap_class, pred_scores, loss = evaluate(
         model,
         iou_thres=opt.iou_thres,
         conf_thres=opt.conf_thres,
@@ -88,3 +96,4 @@ if __name__ == "__main__":
         print(f"+ Class '{c}' ({class_names[c]}) - AP: {AP[i]}")
 
     print(f"mAP: {AP.mean()}")
+    print(f"loss: {loss}")
