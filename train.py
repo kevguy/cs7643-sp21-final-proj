@@ -151,8 +151,8 @@ if __name__ == "__main__":
 
         loss_vals.append(np.sum(epoch_loss)/len(epoch_loss))
 
-        # if epoch % opt.evaluation_interval == 0:
-        if True:
+        if epoch % opt.evaluation_interval == 0:
+        # if True:
             print("\n---- Evaluating Model ----")
             # Evaluate the model on the validation set
             precision, recall, AP, f1, ap_class, pred_scores, loss = evaluate(
