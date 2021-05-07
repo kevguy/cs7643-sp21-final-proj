@@ -39,12 +39,38 @@ Now you have to manage dataset directory structure. Place your dataset into `dat
            ├── velodyne           
 ```
 
+## Download the Weights
+
+You can run `download_weights.py` inside the `checkpoints` folder to download some sample weights, but you can download ours using this link instead:
+
+
+
 ## Training
 
 Run this command:
 
 ```sh
 python train.py --batch_size 3 --epochs 10 --pretrained_weights checkpoints/yolov3_ckpt_epoch-298.pth 
+```
+
+## Evaluation
+
+Run this command to evaluate the performance of a model:
+
+```sh
+python eval_MAP.py --model_def config/complex_yolov3.cfg --weights_path "PATH_TO_THE_MODEL.pth"
+```
+
+## Testing
+
+Run these two commands to test the model:
+
+```sh
+python test_detection.py --weights_path "PATH_TO_THE_MODEL.pth" --model_def config/complex_yolov3.cfg
+```
+
+```sh
+python test_both_side_detection.py --weights_path "PATH_TO_THE_MODEL.pth" --model_def config/complex_yolov3.cfg
 ```
 
 ## KITTI Dataset Information
