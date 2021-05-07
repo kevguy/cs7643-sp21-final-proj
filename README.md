@@ -41,9 +41,7 @@ Now you have to manage dataset directory structure. Place your dataset into `dat
 
 ## Download the Weights
 
-You can run `download_weights.py` inside the `checkpoints` folder to download some sample weights, but you can download ours using this link instead:
-
-
+You can run `download_weights.py` inside the `checkpoints` folder to download some sample weights, but you can use any weights.
 
 ## Training
 
